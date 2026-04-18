@@ -9,6 +9,7 @@
 
     <modules>
         <module>service-registry</module>
+        <module>api-gateway</module>
     </modules>
 
     <properties>
