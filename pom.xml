@@ -6,10 +6,11 @@
     <version>1.0.0</version>
 
     <packaging>pom</packaging>
-
+ssss
     <modules>
         <module>service-registry</module>
         <module>api-gateway</module>
+        <module>booking-service</module>
     </modules>
 
     <properties>
