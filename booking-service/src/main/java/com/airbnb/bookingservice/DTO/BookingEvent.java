@@ -1,32 +1,25 @@
-package com.airbnb.bookingservice.entity;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+package com.airbnb.bookingservice.DTO;
 
 import java.time.LocalDate;
 
-@Entity
-public class Booking
-{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
+public class BookingEvent
+{
     private Long userId;
     private Long propertyId;
-
     private LocalDate startDate;
     private LocalDate endDate;
-    private String status;
 
-    public Long getId() {
-        return id;
+    private String bookingId;
+
+    public BookingEvent() {
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public BookingEvent(Long userId, Long propertyId, LocalDate startDate, LocalDate endDate) {
+        this.userId = userId;
+        this.propertyId = propertyId;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     public Long getUserId() {
@@ -61,11 +54,11 @@ public class Booking
         this.endDate = endDate;
     }
 
-    public String getStatus() {
-        return status;
+    public String getBookingId() {
+        return bookingId;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setBookingId(String bookingId) {
+        this.bookingId = bookingId;
     }
 }
