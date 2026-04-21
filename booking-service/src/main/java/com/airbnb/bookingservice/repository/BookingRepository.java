@@ -16,17 +16,19 @@ import java.util.List;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking,Long>
 {
-    @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.propertyId = :propertyId AND b.startDate <= :endDate AND b.endDate >= :startDate")
+    @Query("SELECT COUNT(b) > 0 FROM Booking b " +
+            "WHERE b.propertyId = :propertyId " +
+            "AND b.bookingId <> :bookingId " +
+            "AND b.startDate <= :endDate " +
+            "AND b.endDate >= :startDate")
     boolean existsConflictingBooking(
             @Param("propertyId") Long propertyId,
+            @Param("bookingId") String bookingId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT b FROM Booking b WHERE b.propertyId = :propertyId")
-    List<Booking> findByPropertyIdForUpdate(
-            @Param("propertyId") Long propertyId
-    );
+    boolean existsByBookingId(String bookingId);
 
+    Booking findByBookingId(String bookingId);
 }

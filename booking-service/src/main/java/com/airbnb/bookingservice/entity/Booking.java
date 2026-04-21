@@ -1,9 +1,6 @@
 package com.airbnb.bookingservice.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
@@ -20,6 +17,9 @@ public class Booking
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
+
+    @Column(unique = true)
+    private String bookingId;
 
     public Long getId() {
         return id;
@@ -67,5 +67,13 @@ public class Booking
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getBookingId() {
+        return bookingId;
+    }
+
+    public void setBookingId(String bookingId) {
+        this.bookingId = bookingId;
     }
 }

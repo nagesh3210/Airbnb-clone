@@ -4,13 +4,19 @@ import com.airbnb.bookingservice.DTO.BookingEvent;
 import com.airbnb.bookingservice.entity.Booking;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
 
+@Service
 public class BookingProducer
 {
-    @Autowired
-    private KafkaTemplate<String, BookingEvent> kafkaTemplate;
+    private final KafkaTemplate<String, BookingEvent> kafkaTemplate;
+
+    public BookingProducer(KafkaTemplate<String, BookingEvent> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     public void send(BookingEvent event) {
-        kafkaTemplate.send("booking-topic", event);
+        System.out.println("Sending: " + event);
+        kafkaTemplate.send("booking-topic",String.valueOf(event.getPropertyId()), event);
     }
 }
