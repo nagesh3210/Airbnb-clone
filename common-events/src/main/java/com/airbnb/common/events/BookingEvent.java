@@ -1,9 +1,10 @@
-package com.airbnb.bookingservice.DTO;
+package com.airbnb.common.events;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 
-public class BookingEvent
+public class BookingEvent implements Serializable
 {
     private Long userId;
     private Long propertyId;

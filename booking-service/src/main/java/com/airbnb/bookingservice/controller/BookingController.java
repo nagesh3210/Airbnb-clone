@@ -1,8 +1,8 @@
 package com.airbnb.bookingservice.controller;
 
 
-import com.airbnb.bookingservice.DTO.BookingEvent;
 import com.airbnb.bookingservice.entity.Booking;
+import com.airbnb.common.events.BookingEvent;
 import com.airbnb.bookingservice.kafka.BookingProducer;
 import com.airbnb.bookingservice.repository.BookingRepository;
 import com.airbnb.bookingservice.service.BookingConsumer;
@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/booking")

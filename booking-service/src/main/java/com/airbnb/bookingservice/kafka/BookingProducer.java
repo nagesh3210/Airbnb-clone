@@ -1,17 +1,15 @@
 package com.airbnb.bookingservice.kafka;
 
-import com.airbnb.bookingservice.DTO.BookingEvent;
-import com.airbnb.bookingservice.entity.Booking;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.airbnb.common.events.BookingEvent;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BookingProducer
 {
-    private final KafkaTemplate<String, BookingEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public BookingProducer(KafkaTemplate<String, BookingEvent> kafkaTemplate) {
+    public BookingProducer(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 

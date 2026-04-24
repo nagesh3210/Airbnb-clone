@@ -1,13 +1,13 @@
 package com.airbnb.bookingservice.service;
 
 
-import com.airbnb.bookingservice.DTO.BookingEvent;
 import com.airbnb.bookingservice.entity.Booking;
+import com.airbnb.bookingservice.kafka.PaymentProducer;
 import com.airbnb.bookingservice.repository.BookingRepository;
+import com.airbnb.common.events.BookingEvent;
+import com.airbnb.common.events.PaymentEvent;
 import jakarta.transaction.Transactional;
-import org.slf4j.ILoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -26,14 +26,17 @@ public class BookingConsumer {
     @Autowired
     private RedisLockService redisLockService;
 
+    @Autowired
+    private PaymentProducer paymentProducer;
+
     private static final Logger log =
             LoggerFactory.getLogger(BookingConsumer.class);
 
     //    @Async("bookingExecutor")
     @Transactional
-    @KafkaListener(topics = "booking-topic", groupId = "booking-group", containerFactory = "kafkaListenerContainerFactory"
+    @KafkaListener(topics = "booking-topic", groupId = "booking-group", containerFactory = "bookingKafkaListenerFactory"
     )
-    public void createBooking(BookingEvent event) {
+    public void createBooking(com.airbnb.common.events.BookingEvent event) {
         System.out.println("Received: " + event);
         log.info("bookingId={} received", event.getBookingId());
 
@@ -80,7 +83,12 @@ public class BookingConsumer {
                     repo.save(booking);
                     log.info("bookingId={} status=CONFIRMED", event.getBookingId());
                     notificationService.sendStatus(event.getBookingId(), "CONFIRMED");
+                    PaymentEvent paymentEvent = new PaymentEvent();
+                    paymentEvent.setBookingId(event.getBookingId());
+                    paymentEvent.setAmount(1000.0);      // TODO: compute real price
+                    paymentEvent.setStatus("INITIATED"); // initial state
 
+                    paymentProducer.send(paymentEvent);
 
                     return;
 
