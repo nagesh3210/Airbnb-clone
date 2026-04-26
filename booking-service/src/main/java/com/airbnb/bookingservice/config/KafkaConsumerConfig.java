@@ -1,6 +1,7 @@
 package com.airbnb.bookingservice.config;
 
 import com.airbnb.common.events.BookingEvent;
+import com.airbnb.common.events.PaymentResultEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
@@ -44,4 +45,33 @@ public class KafkaConsumerConfig {
         return factory;
     }
 
+    @Bean
+    public ConsumerFactory<String, PaymentResultEvent> paymentResultConsumerFactory() {
+
+        Map<String, Object> config = new HashMap<>();
+
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "booking-group");
+
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+
+        return new DefaultKafkaConsumerFactory<>(
+                config,
+                new StringDeserializer(),
+                new JsonDeserializer<>(PaymentResultEvent.class)
+        );
+    }
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PaymentResultEvent> paymentResultKafkaListenerFactory() {
+
+        ConcurrentKafkaListenerContainerFactory<String, PaymentResultEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+
+        factory.setConsumerFactory(paymentResultConsumerFactory());
+
+        return factory;
+    }
 }

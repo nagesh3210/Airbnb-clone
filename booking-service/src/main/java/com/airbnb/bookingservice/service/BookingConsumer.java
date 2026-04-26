@@ -87,9 +87,7 @@ public class BookingConsumer {
                     paymentEvent.setBookingId(event.getBookingId());
                     paymentEvent.setAmount(1000.0);      // TODO: compute real price
                     paymentEvent.setStatus("INITIATED"); // initial state
-
                     paymentProducer.send(paymentEvent);
-
                     return;
 
                 } finally {
