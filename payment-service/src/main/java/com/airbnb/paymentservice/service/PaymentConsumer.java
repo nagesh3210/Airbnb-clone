@@ -3,6 +3,9 @@ package com.airbnb.paymentservice.service;
 import com.airbnb.common.events.PaymentEvent;
 import com.airbnb.common.events.PaymentResultEvent;
 import com.airbnb.paymentservice.kafka.PaymentResultProducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class PaymentConsumer
 {
+
+
+    private static final Logger log =
+            LoggerFactory.getLogger(PaymentConsumer.class);
 
   @Autowired
     private PaymentResultProducer resultProducer;
@@ -20,7 +27,10 @@ public class PaymentConsumer
             containerFactory = "kafkaListenerContainerFactory")
     public void processPayment(PaymentEvent event)
     {
-        System.out.println("Received Payment: "+ event.getBookingId() );
+        try{
+            MDC.put("correlationId", event.getCorrelationId());
+            System.out.println("Received Payment: "+ event.getBookingId() );
+            log.info("correlationId={} bookingId={} received",event.getCorrelationId(), event.getBookingId());
 
         try
         {
@@ -43,7 +53,14 @@ public class PaymentConsumer
             System.out.println("Payment FAILED for " + event.getBookingId());
         }
         resultProducer.send(result);
-
+        }
+        catch (Exception e)
+        {
+            e.getSuppressed();
+        }
+        finally {
+            MDC.clear();
+        }
     }
 
 }

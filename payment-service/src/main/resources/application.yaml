@@ -12,3 +12,11 @@ eureka:
 
   instance:
     prefer-ip-address: true
+
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+
+  pattern:
+    console: "%d{HH:mm:ss} [%thread] %-5level %logger - correlationId=%X{correlationId} - %msg%n"

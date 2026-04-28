@@ -7,6 +7,7 @@ import com.airbnb.bookingservice.repository.BookingRepository;
 import com.airbnb.common.events.BookingEvent;
 import com.airbnb.common.events.PaymentEvent;
 import jakarta.transaction.Transactional;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -37,74 +38,85 @@ public class BookingConsumer {
     @KafkaListener(topics = "booking-topic", groupId = "booking-group", containerFactory = "bookingKafkaListenerFactory"
     )
     public void createBooking(com.airbnb.common.events.BookingEvent event) {
-        System.out.println("Received: " + event);
-        log.info("bookingId={} received", event.getBookingId());
 
-        // ✅ 1. IDEMPOTENCY FIRST
-        if (repo.existsByBookingId(event.getBookingId())) {
-            System.out.println("Duplicate event ignored");
-            return;
-        }
+        try
+        {
+            MDC.put("correlationId", event.getCorrelationId());
+            System.out.println("Received: " + event);
+            log.info("correlationId={} bookingId={} received", event.getCorrelationId(), event.getBookingId());
 
-        Booking booking = new Booking();
-        booking.setBookingId(event.getBookingId());
-        booking.setUserId(event.getUserId());
-        booking.setPropertyId(event.getPropertyId());
-        booking.setStartDate(event.getStartDate());
-        booking.setEndDate(event.getEndDate());
-        booking.setStatus("PENDING");
+            // ✅ 1. IDEMPOTENCY FIRST
+            if (repo.existsByBookingId(event.getBookingId())) {
+                System.out.println("Duplicate event ignored");
+                return;
+            }
 
-        repo.save(booking);
+            Booking booking = new Booking();
+            booking.setBookingId(event.getBookingId());
+            booking.setUserId(event.getUserId());
+            booking.setPropertyId(event.getPropertyId());
+            booking.setStartDate(event.getStartDate());
+            booking.setEndDate(event.getEndDate());
+            booking.setStatus("PENDING");
 
-        String lockKey = "booking:" + event.getPropertyId();
+            repo.save(booking);
 
-        int retries = 3;
+            String lockKey = "booking:" + event.getPropertyId();
 
-        while (retries-- > 0) {
+            int retries = 3;
 
-            boolean locked = redisLockService.acquireLock(lockKey);
+            while (retries-- > 0) {
 
-            if (locked) {
-                try {
-                    boolean exists = repo.existsConflictingBooking(
-                            event.getPropertyId(),
-                            event.getBookingId(),
-                            event.getStartDate(),
-                            event.getEndDate()
-                    );
+                boolean locked = redisLockService.acquireLock(lockKey);
 
-                    if (exists) {
-                        booking.setStatus("FAILED");
+                if (locked) {
+                    try {
+                        boolean exists = repo.existsConflictingBooking(
+                                event.getPropertyId(),
+                                event.getBookingId(),
+                                event.getStartDate(),
+                                event.getEndDate()
+                        );
+
+                        if (exists) {
+                            booking.setStatus("FAILED");
+                            repo.save(booking);
+                            log.warn("correlationId={} bookingId={} status=FAILED (conflict)", event.getCorrelationId(), event.getBookingId());
+                            notificationService.sendStatus(event.getBookingId(), "FAILED");
+                            return;
+                        }
                         repo.save(booking);
-                        log.warn("bookingId={} status=FAILED (conflict)", event.getBookingId());
-                        notificationService.sendStatus(event.getBookingId(), "FAILED");
+                        log.info("correlationId={} bookingId={} status=CONFIRMED", event.getCorrelationId(), event.getBookingId());
+                        notificationService.sendStatus(event.getBookingId(), "CONFIRMED");
+                        PaymentEvent paymentEvent = new PaymentEvent();
+                        paymentEvent.setBookingId(event.getBookingId());
+                        paymentEvent.setAmount(1000.0);      // TODO: compute real price
+                        paymentEvent.setStatus("INITIATED"); // initial state
+                        paymentEvent.setCorrelationId(event.getCorrelationId());
+                        paymentProducer.send(paymentEvent);
                         return;
-                    }
-                    repo.save(booking);
-                    log.info("bookingId={} status=CONFIRMED", event.getBookingId());
-                    notificationService.sendStatus(event.getBookingId(), "CONFIRMED");
-                    PaymentEvent paymentEvent = new PaymentEvent();
-                    paymentEvent.setBookingId(event.getBookingId());
-                    paymentEvent.setAmount(1000.0);      // TODO: compute real price
-                    paymentEvent.setStatus("INITIATED"); // initial state
-                    paymentProducer.send(paymentEvent);
-                    return;
 
-                } finally {
-                    redisLockService.releaseLock(lockKey);
+                    } finally {
+                        redisLockService.releaseLock(lockKey);
+                    }
+                }
+
+                // 🔁 retry wait (important)
+                try {
+                    Thread.sleep(100 * (4 - retries));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
 
-            // 🔁 retry wait (important)
-            try {
-                Thread.sleep(100*(4 - retries));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+            // ❗ DO NOT silently skip
+            throw new RuntimeException("Could not acquire lock after retries");
         }
-
-        // ❗ DO NOT silently skip
-        throw new RuntimeException("Could not acquire lock after retries");
+        finally
+        {
+            MDC.clear();
+        }
     }
+
 }
 

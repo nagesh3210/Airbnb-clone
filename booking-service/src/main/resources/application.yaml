@@ -1,17 +1,9 @@
 server:
   port: 8082
 
-
 spring:
   application:
     name: BOOKING-SERVICE
-
-    logging:
-      level:
-        org:
-          springframework:
-            web=DEBUG:
-
 
   datasource:
     url: jdbc:mysql://localhost:3307/booking_db?useSSL=false&allowPublicKeyRetrieval=true
@@ -28,13 +20,7 @@ spring:
       host: localhost
       port: 6379
 
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-
-  kafka:
+  kafka:   # ✅ CORRECT PLACE
     bootstrap-servers: localhost:9092
 
     consumer:
@@ -50,3 +36,21 @@ eureka:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+
+  pattern:
+    console: "%d{HH:mm:ss} [%thread] %-5level %logger - correlationId=%X{correlationId} - %msg%n"

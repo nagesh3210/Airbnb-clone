@@ -8,13 +8,16 @@ public class PaymentEvent implements Serializable {
     private String bookingId;
     private Double amount;
     private String status;
+    private String correlationId;
+
 
     public PaymentEvent() {}
 
-    public PaymentEvent(String bookingId, Double amount, String status) {
+    public PaymentEvent(String bookingId, Double amount, String status, String correlationId) {
         this.bookingId = bookingId;
         this.amount = amount;
         this.status = status;
+        this.correlationId = correlationId;
     }
 
     public String getBookingId() {
@@ -39,5 +42,13 @@ public class PaymentEvent implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 }

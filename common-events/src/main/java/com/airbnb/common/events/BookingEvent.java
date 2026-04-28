@@ -10,17 +10,18 @@ public class BookingEvent implements Serializable
     private Long propertyId;
     private LocalDate startDate;
     private LocalDate endDate;
-
+    private String correlationId;
     private String bookingId;
 
     public BookingEvent() {
     }
 
-    public BookingEvent(Long userId, Long propertyId, LocalDate startDate, LocalDate endDate) {
+    public BookingEvent(Long userId, Long propertyId, LocalDate startDate, LocalDate endDate,String correlationId) {
         this.userId = userId;
         this.propertyId = propertyId;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.correlationId = correlationId;
     }
 
     public Long getUserId() {
@@ -57,6 +58,14 @@ public class BookingEvent implements Serializable
 
     public String getBookingId() {
         return bookingId;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 
     public void setBookingId(String bookingId) {

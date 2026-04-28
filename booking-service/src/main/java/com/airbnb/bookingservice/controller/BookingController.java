@@ -6,6 +6,7 @@ import com.airbnb.common.events.BookingEvent;
 import com.airbnb.bookingservice.kafka.BookingProducer;
 import com.airbnb.bookingservice.repository.BookingRepository;
 import com.airbnb.bookingservice.service.BookingConsumer;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,13 +36,24 @@ public class BookingController
     @PostMapping("/create")
     public Map<String, String> createBooking(@RequestBody BookingEvent event) {
         String bookingId = UUID.randomUUID().toString();
+        String correlationId = UUID.randomUUID().toString();
         event.setBookingId(bookingId);
-        bookingProducer.send(event);
+        event.setCorrelationId(correlationId);
 
-        return Map.of(
-                "bookingId", bookingId,
-                "status", "PENDING"
-        );
+        try {
+            MDC.put("correlationId", correlationId);
+
+            bookingProducer.send(event);
+
+            return Map.of(
+                    "bookingId", bookingId,
+                    "status", "PENDING"
+            );
+
+        } finally {
+            MDC.clear();   // 🔥 VERY IMPORTANT
+        }
+
     }
 
     @GetMapping("/status/{bookingId}")
