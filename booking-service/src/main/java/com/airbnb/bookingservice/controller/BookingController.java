@@ -8,6 +8,8 @@ import com.airbnb.bookingservice.repository.BookingRepository;
 import com.airbnb.bookingservice.service.BookingConsumer;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,8 +51,8 @@ public class BookingController
                     "bookingId", bookingId,
                     "status", "PENDING"
             );
-
-        } finally {
+        }
+        finally {
             MDC.clear();   // 🔥 VERY IMPORTANT
         }
 

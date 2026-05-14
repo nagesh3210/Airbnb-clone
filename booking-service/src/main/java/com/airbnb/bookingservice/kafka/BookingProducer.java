@@ -34,7 +34,7 @@ public class BookingProducer
             }
     }
 
-    public String fallback(BookingEvent event, Exception ex) {
+    public String fallback(BookingEvent event, Throwable ex) {
         System.out.println("Fallback triggered: " + ex.getMessage());
         return "REQUEST_QUEUED";
     }

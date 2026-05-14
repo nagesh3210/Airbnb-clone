@@ -23,6 +23,10 @@ spring:
   kafka:
     bootstrap-servers: kafka:9092
 
+
+    admin:
+      auto-create: true
+
     consumer:
       group-id: booking-group
       auto-offset-reset: earliest
@@ -54,3 +58,8 @@ logging:
 
   pattern:
     console: "%d{HH:mm:ss} [%thread] %-5level %logger - correlationId=%X{correlationId} - %msg%n"
+
+    cloud:
+      openfeign:
+        circuitbreaker:
+          enabled: true

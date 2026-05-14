@@ -1,16 +1,19 @@
 package com.airbnb.bookingservice.service;
 
-
+import com.airbnb.bookingservice.client.PropertyClient;
 import com.airbnb.bookingservice.entity.Booking;
 import com.airbnb.bookingservice.kafka.PaymentProducer;
 import com.airbnb.bookingservice.repository.BookingRepository;
-import com.airbnb.common.events.BookingEvent;
 import com.airbnb.common.events.PaymentEvent;
+import feign.FeignException;
 import jakarta.transaction.Transactional;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import com.airbnb.bookingservice.client.PropertyClient;
+import com.airbnb.bookingservice.dto.PropertyDto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +23,9 @@ public class BookingConsumer {
 
     @Autowired
     private BookingRepository repo;
+
+    @Autowired
+    private PropertyClient propertyClient;
 
     @Autowired
     private BookingNotificationService notificationService;
@@ -50,6 +56,39 @@ public class BookingConsumer {
                 System.out.println("Duplicate event ignored");
                 return;
             }
+            try
+            {
+
+                PropertyDto propertyById = propertyClient.getPropertyById(Long.valueOf(event.getPropertyId()));
+            }
+            catch (FeignException.NotFound ex)
+            {
+                Booking booking = new Booking();
+                booking.setBookingId(event.getBookingId());
+                booking.setUserId(event.getUserId());
+                booking.setPropertyId(event.getPropertyId());
+                booking.setStartDate(event.getStartDate());
+                booking.setEndDate(event.getEndDate());
+                booking.setStatus("FAILED");
+
+                repo.save(booking);
+
+                notificationService.sendStatus(
+                        event.getBookingId(),
+                        "PROPERTY_NOT_FOUND"
+                );
+
+                log.error(
+                        "Property not found for propertyId={}",
+                        event.getPropertyId()
+                );
+
+                return;
+
+            }
+
+
+
 
             Booking booking = new Booking();
             booking.setBookingId(event.getBookingId());

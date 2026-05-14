@@ -84,3 +84,20 @@ services:
       - service-registry
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  property-service:
+    build: ./property-service
+
+    ports:
+      - "8086:8086"
+
+    depends_on:
+      - kafka
+      - service-registry
+      - mysql
+      - booking-service
+
+    restart: always
+
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
