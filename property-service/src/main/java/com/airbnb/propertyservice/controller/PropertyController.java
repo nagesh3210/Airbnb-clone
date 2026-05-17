@@ -4,6 +4,9 @@ import com.airbnb.propertyservice.dto.Propertydto;
 import com.airbnb.propertyservice.entity.Property;
 import com.airbnb.propertyservice.service.PropertyService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,16 +55,20 @@ public class PropertyController {
         Propertydto property = service.getById(id);
         return ResponseEntity.ok(property);
     }
-
+     //GET /property/search?location=goa&page=0&size=5
     // SEARCH PROPERTIES
+    //GET /property/search?location=goa&sort=pricePerNight,desc
     @GetMapping("/search")
-    public ResponseEntity<List<Propertydto>> searchProperties(
-            @RequestParam String location) {
+    public ResponseEntity<Page<Propertydto>> searchProperties(
+            @RequestParam String location ,
+            @PageableDefault(
+                    size = 5,
+                    sort = "pricePerNight"
+            ) Pageable pageable) {
 
-        List<Propertydto> properties =
-                service.search(location);
+        Page<Propertydto> search = service.search(location, pageable);
 
-        return ResponseEntity.ok(properties);
+        return ResponseEntity.ok(search);
     }
 
     // DELETE PROPERTY

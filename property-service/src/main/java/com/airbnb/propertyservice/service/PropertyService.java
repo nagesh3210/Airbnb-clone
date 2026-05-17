@@ -5,6 +5,8 @@ import com.airbnb.propertyservice.entity.Property;
 import com.airbnb.propertyservice.exception.ResourceNotFoundException;
 import com.airbnb.propertyservice.repository.PropertyRepository;
 import lombok.Data;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.airbnb.propertyservice.service.serviceMethod;
@@ -59,12 +61,10 @@ public class PropertyService
     }
 
     // SEARCH
-    public List<Propertydto> search(String location) {
+    public Page<Propertydto> search(String location , Pageable pageable) {
 
-        return repo.findByLocation(location)
-                .stream()
-                .map(serviceMethod::mapToDto)
-                .toList();
+        return repo.findByLocationContainingIgnoreCase(location ,pageable)
+                .map(serviceMethod::mapToDto);
     }
 
     public boolean delete(Long id)

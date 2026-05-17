@@ -63,3 +63,5 @@ logging:
       openfeign:
         circuitbreaker:
           enabled: true
+
+
